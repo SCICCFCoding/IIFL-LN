@@ -1,0 +1,8 @@
+,server,client1,client2,client3
+Samples,4474,4349,4479,4416
+missing_hole,742,786,734,720
+short,738,670,782,762
+mouse_bite,730,641,737,784
+spur,730,728,723,747
+spurious_copper,811,785,754,668
+open_circuit,723,739,749,735

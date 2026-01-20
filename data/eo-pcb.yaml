@@ -1,0 +1,8 @@
+# IIFL-LN - E-O-PCBdatasets
+
+train: ./datasets/eo-pcb
+val: ./datasets/eo-pcb
+
+nc: 6
+
+names: ['missing_hole', 'short', 'mouse_bite', 'spur', 'spurious_copper', 'open_circuit'] 
