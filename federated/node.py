@@ -23,7 +23,6 @@ from typing import List, Tuple
 class Node: 
     """General node logic common to the server and clients. Allows server-side and client-side evaluation."""
     
-    #初始化和属性
     def __init__(self, rank: int) -> None:
         """Initialize the node with its rank, device, public and private keys."""
         self.rank = rank
@@ -195,7 +194,6 @@ class Node:
         model.names = data_dict['names']  # attach class names to model
         self._ckpt['model'] = model
 
-    #模型测试
     def test(self, kround: int, saving_path: str, data: str, bsz: int, imgsz: int, conf: float, iou: float) -> None:
         """Evaluate the model on the validation set held by the node."""
         weights = f'{saving_path}/weights/eval-kround{kround}.pt'
@@ -208,8 +206,6 @@ class Node:
             f' --data {data}'
             f' --batch {bsz}'
             f' --img {imgsz}'
-            # f' --batch-size {bsz}'
-            # f' --img-size {imgsz}'
             f' --conf-thres {conf}'
             f' --iou-thres {iou}'
             f' --task val'
@@ -221,7 +217,6 @@ class Node:
 class Server(Node):
     """Specific server logic (model initialization, server-side optimization, weights and key sharing)."""
 
-    #支持多种联邦优化算法：fedavg, fedavgm, fedadagrad, fedadam, fedyogi
     def __init__(self, server_opt: str = 'fedavg', serverlr: float = 1., tau: float = None, beta: float = None) -> None:
         """Initialize the server with rank 0 and optimizer (fedavg, fedavgm, fedadagrad, fedadam or fedyogi)."""
         super().__init__(rank=0)
@@ -393,7 +388,6 @@ class Server(Node):
         }
         return w_t
 
-
     def aggregate(self, state_dicts_encrypted: List[Tuple[bytes, bytes, bytes, int]]) -> None:
         """Compute the weights for the next communication round using the clients' local updates."""
         updates, nsamples_list = self.__decrypt_updates(state_dicts_encrypted)
@@ -420,27 +414,26 @@ class Server(Node):
                 "abnormal_clients": abnormal_clients
             }
             abnormal_clients = [cid for cid in all_clients if cid not in normal_clients]
-            print(f"第{getattr(self, 'current_round', '?')}轮：")
-            print(f"参与聚合的正常客户端: {normal_clients}")
-            print(f"被判定为异常的客户端: {abnormal_clients}")
+            print(f"Round {getattr(self, 'current_round', '?')}:")
+            print(f"Normal clients participating in aggregation: {normal_clients}")
+            print(f"Clients determined as abnormal: {abnormal_clients}")
             with open('experiments90/run/immune_detection.log', 'a') as f:
                 f.write(f"Round {getattr(self, 'current_round', '?')}: Normal: {normal_clients}, Abnormal: {abnormal_clients}\n")
 
-        delta_t = filtered_params
+            delta_t = filtered_params
 
-        if delta_t:  
-            first_param_key = next(iter(delta_t.keys()))
+            if delta_t:  
+                first_param_key = next(iter(delta_t.keys()))
 
-            avg_update_value = delta_t[first_param_key].mean().item()
-            current_round = getattr(self, 'current_round', '未知')
-            print(f"\n[模型更新验证] 第{current_round}轮全局模型更新均值：")
-            print(f"  - 验证参数：{first_param_key}")
-            print(f"  - 更新均值：{avg_update_value:.6f}")
-            if abs(avg_update_value) < 1e-5:
-                print(f"  ⚠️  警告：更新均值接近0，模型可能未有效更新！\n")
-            else:
-                print(f"  ✅ 正常：模型更新有效\n")
-
+                avg_update_value = delta_t[first_param_key].mean().item()
+                current_round = getattr(self, 'current_round', 'Unknown')
+                print(f"\n[Model Update Validation] Round {current_round} global model update mean value:")
+                print(f"  - Validation parameter: {first_param_key}")
+                print(f"  - Update mean value: {avg_update_value:.6f}")
+                if abs(avg_update_value) < 1e-5:
+                    print(f"  ⚠️  Warning: Update mean value is close to 0, the model may not be updated effectively!\n")
+                else:
+                    print(f"  ✅ Normal: Model update is effective\n")
 
 
         if self.server_opt == 'fedavg':
@@ -550,8 +543,7 @@ class Client(Node):
             # Initialize the training loop and perform the first round of training
             begin_weights = f'{saving_path}/weights/train-kround{kround}-client{self.rank}.pt'
             torch.save(self._ckpt, begin_weights)
-            
-            # 运行训练脚本并捕获任何异常
+
             try:
                 print(f"Client {self.rank}: Starting training for round {kround}")
                 os.system(
@@ -583,7 +575,7 @@ class Client(Node):
             try:
                 print(f"Client {self.rank}: Resuming training for round {kround}")
                 os.system(f'python {script_path} --resume {begin_weights}'
-                        f' --exist-ok'  # 关键：添加此参数，禁用自动递增
+                        f' --exist-ok'  
                             )
                 print(f"Client {self.rank}: Completed training for round {kround}")
             except Exception as e:
@@ -603,7 +595,7 @@ class Client(Node):
                 if w_t[key].shape == w_it[key].shape:
                     delta_it[key] = w_t[key] - w_it[key]
                 else:
-                    print(f"警告: 参数 {key} 维度不匹配 - 服务器: {w_t[key].shape}, 客户端: {w_it[key].shape}")
+                    print(f"Warning: Parameter {key} dimension mismatch - Server: {w_t[key].shape}, Client: {w_it[key].shape}")
                     delta_it[key] = torch.zeros_like(w_t[key])
             self.__update = delta_it
 
@@ -612,36 +604,36 @@ class Client(Node):
             if self.attack_type == 1:
                 for key in self.__update:
                     self.__update[key] = torch.full_like(self.__update[key], 1)
-                print(f"Client {self.rank}: 应用常数攻击 - 所有参数置为1")
+                print(f"Client {self.rank}: Applying constant attack - All parameters set to 1")
                 
 
                 first_key = list(self.__update.keys())[0]
                 original_first_5 = original_update[first_key].flatten()[:5]  
                 attacked_first_5 = self.__update[first_key].flatten()[:5]
-                log_message = f"轮次 {kround} - 客户端 {self.rank} 常数攻击验证:\n 原始值: {original_first_5}\n -> 攻击后: {attacked_first_5}\n"
+                log_message = f"Round {kround} - Client {self.rank} constant attack verification:\n Original values: {original_first_5}\n -> After attack: {attacked_first_5}\n"
 
                 log_file = os.path.join(saving_path, "attack_log.txt")
                 with open(log_file, "a") as f:
                     f.write(log_message)
-                print(f"[攻击验证] 客户端 {self.rank} 常数攻击结果已保存")
+                print(f"[Attack Verification] Client {self.rank} constant attack results saved")
                 
             elif self.attack_type == 2:
 
                 for key in self.__update:
                     self.__update[key] = -self.__update[key]
-                print(f"Client {self.rank}: 应用符号翻转攻击 - 所有参数符号翻转")
+                print(f"Client {self.rank}: Applying sign flip attack - All parameter signs flipped")
                 
 
                 first_key = list(self.__update.keys())[0]
                 original_first_5 = original_update[first_key].flatten()[:5]  
                 attacked_first_5 = self.__update[first_key].flatten()[:5]
-                log_message = f"轮次 {kround} - 客户端 {self.rank} 符号翻转攻击验证:\n 原始值: {original_first_5} \n-> 攻击后: {attacked_first_5}\n"
+                log_message = f"Round {kround} - Client {self.rank} sign flip attack verification:\n Original values: {original_first_5} \n-> After attack: {attacked_first_5}\n"
 
             if self.attack_type in [1, 2]:
                 log_file = os.path.join(saving_path, "attack_log.txt")
                 with open(log_file, "a") as f:
                     f.write(log_message)
-                print(f"[攻击验证] 结果已保存到: {log_file}")
+                print(f"[Attack Verification] Results saved to: {log_file}")
 
             self._ckpt = new_ckpt
         else:

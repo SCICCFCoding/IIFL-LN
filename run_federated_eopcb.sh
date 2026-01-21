@@ -1,35 +1,32 @@
-
-echo "【步骤1/5】正在检查GPU信息..."
+echo "【Step 1/5】Checking GPU information..."
 nvidia-smi
 
-# 设置环境变量
-echo "【步骤2/5】正在设置MPI环境变量..."
+echo "【Step 2/5】Setting MPI environment variables..."
 export OMPI_ALLOW_RUN_AS_ROOT=1
 export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 
-# 准备保存结果的目录
-echo "【步骤3/5】正在创建结果保存目录..."
+echo "【Step 3/5】Creating result saving directory..."
 saving_path=$(pwd)/results/eo-pcb/yolov7/fedoptm
 mkdir -p $saving_path
-echo "结果目录已创建：$saving_path"
+echo "Result directory created: $saving_path"
 
-# 检查并下载预训练权重
-echo "【步骤4/5】正在检查预训练权重..."
+
+echo "【Step 4/5】Checking pre-trained weights..."
 if [ ! -f weights/yolov7/yolov7_training.pt ]; then
-    echo "权重文件不存在，正在下载..."
+    echo "Weight file does not exist, downloading..."
     wget -P weights/yolov7/ https://github.com/WongKinYiu/yolov7/releases/download/v0.1/yolov7_training.pt
-    # 下载后检查是否成功
+
     if [ -f weights/yolov7/yolov7_training.pt ]; then
-        echo "权重下载成功！"
+        echo "Weight download successful!"
     else
-        echo "权重下载失败！请手动下载后放到对应路径。"
-        exit 1  # 下载失败则退出，避免后续报错
+        echo "Weight download failed! Please download it manually and place it in the corresponding path."
+        exit 1  
     fi
 else
-    echo "权重文件已存在，跳过下载。"
+    echo "Weight file already exists, skipping download."
 fi
 
-echo "【步骤5/5】正在启动联邦学习（1服务器+5客户端）..."
+echo "【Step 5/5】Starting federated learning (1 server + 5 clients)..."
 mpirun -n 6 -x CUDA_VISIBLE_DEVICES=1 python federated/main.py \
     --nrounds 30 \
     --epochs 5 \
@@ -51,12 +48,12 @@ mpirun -n 6 -x CUDA_VISIBLE_DEVICES=1 python federated/main.py \
     --detection-threshold 0.5 \
     --trusted-clients 1,4,5\
     --client-attack-types 0,1.1,0,0
-echo "联邦学习任务启动完成！"
-# 备份实验结果
-echo "【步骤6/6】正在备份实验结果..."
+echo "Federated learning task started successfully!"
+
+echo "【Step 6/6】Backing up experiment results..."
 if [ -d "./experiments29" ]; then
     cp -r ./experiments29 $saving_path
-    echo "结果备份成功：$saving_path/experiments29"
+    echo "Result backup successful: $saving_path/experiments29"
 else
-    echo "未找到experiments29目录，跳过备份。"
+    echo "experiments29 directory not found, skipping backup."
 fi

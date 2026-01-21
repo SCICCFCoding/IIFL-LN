@@ -1,32 +1,30 @@
-# FedPylot 修改版 - E-O-PCB电子元件PCB缺陷检测联邦学习超参数
-
-lr0: 0.01  # 初始学习率
-lrf: 0.1  # 最终OneCycleLR学习率
-momentum: 0.937  # SGD动量
-weight_decay: 0.0005  # 优化器权重衰减
-warmup_epochs: 15.0  # 预热轮次
-warmup_momentum: 0.8  # 预热初始动量
-warmup_bias_lr: 0.1  # 预热初始bias学习率
-box: 0.05  # 边界框损失增益
-cls: 0.3  # 分类损失增益
-cls_pw: 1.0  # 分类BCELoss正权重
-obj: 0.7  # 目标损失增益
-obj_pw: 1.0  # 目标BCELoss正权重
-iou_t: 0.20  # IoU训练阈值
-anchor_t: 4.0  # 锚点多重阈值
-fl_gamma: 0.0  # 焦点损失伽马
-hsv_h: 0.015  # 图像HSV-Hue增强
-hsv_s: 0.7  # 图像HSV-Saturation增强
-hsv_v: 0.4  # 图像HSV-Value增强
-degrees: 0.0  # 图像旋转
-translate: 0.2  # 图像平移
-scale: 0.5  # 图像缩放
-shear: 0.0  # 图像剪切
-perspective: 0.0  # 图像透视
-flipud: 0.0  # 图像上下翻转
-fliplr: 0.5  # 图像左右翻转
-mosaic: 1.0  # 图像马赛克增强
-mixup: 0.0  # 图像混合增强
-copy_paste: 0.0  # 图像复制粘贴
-paste_in: 0.0  # 图像内部复制粘贴
-loss_ota: 1  # 使用ComputeLossOTA 
+lr0: 0.01  # Initial learning rate
+lrf: 0.1  # Final OneCycleLR learning rate
+momentum: 0.937  # SGD momentum
+weight_decay: 0.0005  # Optimizer weight decay
+warmup_epochs: 15.0  # Warmup epochs
+warmup_momentum: 0.8  # Warmup initial momentum
+warmup_bias_lr: 0.1  # Warmup initial bias learning rate
+box: 0.05  # Bounding box loss gain
+cls: 0.3  # Classification loss gain
+cls_pw: 1.0  # Classification BCELoss positive weight
+obj: 0.7  # Object loss gain
+obj_pw: 1.0  # Object BCELoss positive weight
+iou_t: 0.20  # IoU training threshold
+anchor_t: 4.0  # Anchor multiple threshold
+fl_gamma: 0.0  # Focal loss gamma
+hsv_h: 0.015  # Image HSV-Hue augmentation
+hsv_s: 0.7  # Image HSV-Saturation augmentation
+hsv_v: 0.4  # Image HSV-Value augmentation
+degrees: 0.0  # Image rotation
+translate: 0.2  # Image translation
+scale: 0.5  # Image scaling
+shear: 0.0  # Image shearing
+perspective: 0.0  # Image perspective transformation
+flipud: 0.0  # Image vertical flip
+fliplr: 0.5  # Image horizontal flip
+mosaic: 1.0  # Image mosaic augmentation
+mixup: 0.0  # Image mixup augmentation
+copy_paste: 0.0  # Image copy-paste augmentation
+paste_in: 0.0  # Image in-image copy-paste augmentation
+loss_ota: 1  # Use ComputeLossOTA

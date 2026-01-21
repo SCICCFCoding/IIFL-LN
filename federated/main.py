@@ -18,7 +18,7 @@ def init_node(rank: int, server_opt: str, server_lr: float, tau: float, beta: fl
         raise ValueError(f'Server optimizer {server_opt} unavailable, must be in {available_optimizers}.')
     if rank == 0:
         node = Server(server_opt, server_lr, tau, beta)
-        node.use_immune_detection = args.use_immune_detection  # 直接绑定命令行参数
+        node.use_immune_detection = args.use_immune_detection  
         if args.use_immune_detection:
             node.use_immune_detection = True
             node.detection_threshold = args.detection_threshold
@@ -74,7 +74,6 @@ def federated_loop(node: Node, nrounds: int, epochs: int, saving_path: str, arch
         if kround == 0:
             initial_broadcast(node, pretrained_weights, data, cfg, hyp, imgsz)
         # Client level computation (local training)
-        # 客户端本地训练
         if node.rank != 0:
             node.train(nrounds, kround, epochs, architecture, data, bsz_train, imgsz, cfg, hyp, workers, saving_path)
             sd_encrypted = node.get_update()
@@ -97,19 +96,19 @@ def federated_loop(node: Node, nrounds: int, epochs: int, saving_path: str, arch
                 except NameError:
                     true_abnormal = []
                 detected_true = [cid for cid in abnormal_clients if cid in true_abnormal]
-                识别率 = len(detected_true) / len(true_abnormal) if true_abnormal else 0
+                Detection rate = len(detected_true) / len(true_abnormal) if true_abnormal else 0
 
                 true_normal = [cid for cid in all_clients if cid not in true_abnormal]
                 false_abnormal = [cid for cid in abnormal_clients if cid in true_normal]
-                误判率 = len(false_abnormal) / len(true_normal) if true_normal else 0
+                False positive rate = len(false_abnormal) / len(true_normal) if true_normal else 0
 
                 log_msg = (
-                    f"Round {kround}: 异常节点检测结果\n"
-                    f"  所有客户端: {all_clients}\n"
-                    f"  正常客户端: {normal_clients}\n"
-                    f"  异常客户端: {abnormal_clients}\n"
-                    f"  识别率: {识别率:.2%} (检测到的真实异常节点数: {len(detected_true)}/{len(true_abnormal)})\n"
-                    f"  误判率: {误判率:.2%} (误判的正常节点数: {len(false_abnormal)}/{len(true_normal)})\n"
+                    f"Round {kround}: Anomaly node detection results\n"
+                    f"  All clients: {all_clients}\n"
+                    f"  Normal clients: {normal_clients}\n"
+                    f"  Abnormal clients: {abnormal_clients}\n"
+                    f"  Detection rate: {detection_rate:.2%} (Number of detected true abnormal nodes: {len(detected_true)}/{len(true_abnormal)})\n"
+                    f"  False positive rate: {false_positive_rate:.2%} (Number of falsely judged normal nodes: {len(false_abnormal)}/{len(true_normal)})\n"
                 )
                 print(log_msg)
                 log_path = os.path.join(saving_path, "immune_detection_log.txt")

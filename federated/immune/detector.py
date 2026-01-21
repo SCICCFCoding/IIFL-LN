@@ -3,21 +3,21 @@ import numpy as np
 from typing import Dict, List, Tuple
 
 class ImmuneDetector:
-    """免疫负向选择检测器 - 增强版（欧氏距离 + 余弦相似度）"""
+    """Immune Negative Selection Detector - Enhanced Version (Euclidean Distance + Cosine Similarity)"""
     
     def __init__(self, threshold: float = 0.5):
         """
-        初始化检测器
+        Initialize the detector
         
         Args:
-            threshold: 欧氏距离异常检测阈值，默认为0.5
-            cosine_threshold: 余弦相似度阈值，默认为0.5
+            threshold: Euclidean distance anomaly detection threshold, default is 0.5
+            cosine_threshold: Cosine similarity threshold, default is 0.5
         """
         self.threshold = threshold
         
     def calculate_distance(self, a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
         """
-        计算两个张量之间的欧氏距离
+        Calculate the Euclidean distance between two tensors
         """
         a = a.to(torch.float)
         b = b.to(torch.float)
@@ -30,14 +30,14 @@ class ImmuneDetector:
     
     def calculate_cosine_similarity(self, a: torch.Tensor, b: torch.Tensor) -> float:
         """
-        计算两个张量之间的余弦相似度
+        Calculate the cosine similarity between two tensors
         
         Args:
-            a: 第一个张量
-            b: 第二个张量
+            a: The first tensor
+            b: The second tensor
             
         Returns:
-            float: 余弦相似度值 [-1, 1]
+            float: Cosine similarity value [-1, 1]
         """
         a_flat = a.flatten().to(torch.float)
         b_flat = b.flatten().to(torch.float)
@@ -54,8 +54,8 @@ class ImmuneDetector:
     
     def _get_client_weight(self, client_id: int, default_weight: float = 1.0) -> float:
         """
-        获取客户端权重 - 可以基于样本量或其他指标
-        这里使用简单实现，你可以根据实际需求扩展
+        Get client weight - Can be based on sample size or other metrics
+        A simple implementation is used here, you can extend it according to actual needs
         """
         return default_weight
     
@@ -65,16 +65,16 @@ class ImmuneDetector:
               all_clients: List[int],
               previous_model: Dict[str, torch.Tensor] = None) -> Tuple[Dict[str, torch.Tensor], List[int]]:
         """
-        使用免疫负向选择算法检测异常客户端 - 增强版
+        Detect abnormal clients using Immune Negative Selection Algorithm - Enhanced Version
         
         Args:
-            trusted_clients: 可信客户端ID列表
-            client_params: 客户端参数字典
-            all_clients: 所有客户端ID列表
-            previous_model: 上一轮全局模型参数（用于计算更新方向）
+            trusted_clients: List of trusted client IDs
+            client_params: Client parameter dictionary
+            all_clients: List of all client IDs
+            previous_model: Global model parameters from the previous round (used to calculate update direction)
             
         Returns:
-            Tuple[更新方向delta_t, 正常客户端列表]
+            Tuple[Update direction delta_t, List of normal clients]
         """
         sum_parameters = None
         total_weight = 0.0
@@ -154,8 +154,8 @@ class ImmuneDetector:
 
             if abnormal_count1 <= total_params * (1 - self.threshold) and abnormal_count2 <= total_params * 0.5:
                 normal_clients.append(client_id)
-                print(f"[IMMUNE] 客户端{client_id} 被判定为正常节点 (欧氏距离异常参数数: {abnormal_count1}/{total_params})")
-                print(f"[IMMUNE] 客户端{client_id} 被判定为正常节点 (余弦异常参数数: {abnormal_count2}/{total_params})")
+                print(f"[IMMUNE] Client {client_id} is determined as a normal node (Number of abnormal parameters by Euclidean distance: {abnormal_count1}/{total_params})")
+                print(f"[IMMUNE] Client {client_id} is determined as a normal node (Number of abnormal parameters by cosine similarity: {abnormal_count2}/{total_params})")
                 weight = self._get_client_weight(client_id)
                 if sum_parameters is not None:
                     for key in sum_parameters:
@@ -163,8 +163,8 @@ class ImmuneDetector:
                                              client_params[client_id][key] * weight) / (total_weight + weight)
                     total_weight += weight
             else:
-                print(f"[IMMUNE] 客户端{client_id} 被判定为异常节点 (欧氏距离异常参数数: {abnormal_count1}/{total_params})")
-                print(f"[IMMUNE] 客户端{client_id} 被判定为异常节点 (余弦异常参数数: {abnormal_count2}/{total_params})")
+                print(f"[IMMUNE] Client {client_id} is determined as an abnormal node (Number of abnormal parameters by Euclidean distance: {abnormal_count1}/{total_params})")
+                print(f"[IMMUNE] Client {client_id} is determined as an abnormal node (Number of abnormal parameters by cosine similarity: {abnormal_count2}/{total_params})")
 
         if previous_model is not None and sum_parameters is not None:
             delta_t = {}
@@ -176,5 +176,3 @@ class ImmuneDetector:
             return delta_t, normal_clients
         else:
             return sum_parameters, normal_clients
-
-
